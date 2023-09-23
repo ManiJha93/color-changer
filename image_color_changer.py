@@ -89,4 +89,4 @@ Mail: info@leduncle.com
         # Display the new image on the canvas
         self.canvas.delete("all")
         self.canvas.image = tk.PhotoImage(new_image)
-        self.canvas.create_image(0, 0,
+        self.canvas.create_image(0, 0,)
