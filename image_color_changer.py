@@ -1,72 +1,92 @@
-import streamlit as st
-import cv2
-import numpy as np
+import tkinter as tk
+from PIL import Image, ImageDraw
 
-def change_color(image, color):
-  """Changes the color of the object in the image.
+class AdvancedColorChangerApp:
+    def __init__(self):
+        self.root = tk.Tk()
+        self.root.title("LED Uncle Color Changer")
 
-  Args:
-    image: A numpy array representing the image.
-    color: A tuple of (R, G, B) values representing the desired color.
+        # Header
+        self.header_frame = tk.Frame(self.root, bg="blue")
+        self.header_label = tk.Label(self.header_frame, text="LED Uncle Color Changer", font=("Arial", 24))
+        self.header_label.pack()
+        self.header_frame.pack(fill="x")
 
-  Returns:
-    A numpy array representing the image with the changed color.
-  """
+        # Upload image
+        self.upload_button = tk.Button(self.root, text="Upload Image", command=self.upload_image)
+        self.upload_button.grid(row=1, column=0)
 
-  # Convert the image to HSV color space.
-  hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        # Select object
+        self.select_object_button = tk.Button(self.root, text="Select Object", command=self.select_object)
+        self.select_object_button.grid(row=1, column=1)
 
-  # Hue is the hue angle of the color.
-  hue = color[0]
+        # Color bar
+        self.color_bar = tk.Scale(self.root, from_=0, to=255, orient=tk.HORIZONTAL)
+        self.color_bar.grid(row=2, column=0, columnspan=2)
 
-  # Saturation is the intensity of the color.
-  saturation = color[1]
+        # Download image
+        self.download_button = tk.Button(self.root, text="Download Image", command=self.download_image)
+        self.download_button.grid(row=3, column=0)
 
-  # Value is the brightness of the color.
-  value = color[2]
+        # Image canvas
+        self.canvas = tk.Canvas(self.root, width=500, height=500)
+        self.canvas.grid(row=1, column=2, rowspan=3)
 
-  # Set the hue of the object to the desired hue.
-  hsv[:, :, 0] = hue
+        # Current image
+        self.current_image = None
 
-  # Convert the image back to BGR color space.
-  bgr = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+        # Selected object
+        self.selected_object = None
 
-  return bgr
+        # Color to change object to
+        self.new_color = (0, 0, 0)
 
-# Create a Streamlit app.
-st.title("Image Color Changer")
+        # Footer
+        self.footer_frame = tk.Frame(self.root, bg="blue")
+        self.contact_now_button = tk.Button(self.footer_frame, text="Contact Now", command=self.contact_now)
+        self.contact_now_button.pack()
+        self.footer_frame.pack(fill="x")
 
-# Upload the image.
-uploaded_image = st.file_uploader("Upload an image:", type=["png", "jpg"])
+        # Contact information
+        self.contact_information = """
+Address: 101-A, Second Floor, Shiv Kutir, Hari Nagar Ashram, Delhi 110014
+Mobile: 011 26342933
+Mail: info@leduncle.com
+"""
 
-# If the image is uploaded, display it and allow the user to change its color.
-if uploaded_image is not None:
+        self.root.mainloop()
 
-  # Convert the uploaded_image object to a string.
-  image_path = str(uploaded_image)
+    def upload_image(self):
+        # Get the image file path
+        image_file_path = tk.filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.png")])
 
-  # Load the image.
-  image = cv2.imread(image_path)
+        # Load the image
+        self.current_image = Image.open(image_file_path)
 
-  # Display the image.
-  st.image(image, use_column_width=True)
+        # Display the image on the canvas
+        self.canvas.delete("all")
+        self.canvas.image = tk.PhotoImage(self.current_image)
+        self.canvas.create_image(0, 0, image=self.canvas.image, anchor="nw")
 
-  # Create a list of color tabs.
-  color_tabs = st.tabs(["Red", "Green", "Blue"])
+        # Enable the select object button
+        self.select_object_button.config(state="normal")
 
-  # Display the selected color tab.
-  selected_color_tab = color_tabs.active_tab
+    def select_object(self):
+        # Get the coordinates of the selected object
+        self.selected_object = self.canvas.get_rectangle()
 
-  # Change the color of the object in the image based on the selected color tab.
-  if selected_color_tab == "Red":
-    color = (255, 0, 0)
-  elif selected_color_tab == "Green":
-    color = (0, 255, 0)
-  elif selected_color_tab == "Blue":
-    color = (0, 0, 255)
+    def change_color(self):
+        # Get the new color from the color bar
+        self.new_color = (self.color_bar.get(), self.color_bar.get(), self.color_bar.get())
 
-  # Change the color of the object in the image.
-  changed_image = change_color(image, color)
+        # Create a copy of the current image
+        new_image = self.current_image.copy()
 
-  # Display the changed image.
-  st.image(changed_image, use_column_width=True)
+        # Draw a rectangle over the selected object with the new color
+        draw = ImageDraw.Draw(new_image)
+        draw.rectangle(self.selected_object, fill=self.new_color)
+
+        # Display the new image on the canvas
+        self.canvas.delete("all")
+        self.canvas.image = tk.PhotoImage(new_image)
+        self.canvas.create_image(0, 0,
